@@ -19,17 +19,31 @@ ordner_paths = {
     'Musik': ['mp3', 'wav', 'aac', 'flac', 'ogg', 'm4a']
 }
 
+def is_file_accessible(filepath):
+    """Prüft, ob die Datei von keinem anderen Prozess verwendet wird und daher verschoben werden kann."""
+    try:
+        with open(filepath, 'rb+', buffering=0):
+            return True
+    except IOError:
+        return False
+
+def generate_unique_filename(target_path, filename):
+    """Generiert einen einzigartigen Dateinamen, wenn eine Datei mit demselben Namen bereits existiert."""
+    base, extension = os.path.splitext(filename)
+    counter = 1
+    while os.path.exists(target_path):
+        target_path = os.path.join(os.path.dirname(target_path), f"{base}_{counter}{extension}")
+        counter += 1
+    return target_path
+
 class DownloadHandler(FileSystemEventHandler):
     def on_modified(self, event):
-        # Überprüfen Sie jede Datei im Download-Ordner
+        time.sleep(2)  # Kurze Verzögerung
         for filename in os.listdir(download_path):
             src = os.path.join(download_path, filename)
-            if os.path.isfile(src):
-                # Dateierweiterung extrahieren und in Kleinbuchstaben konvertieren
+            if os.path.isfile(src) and is_file_accessible(src):
                 _, extension = os.path.splitext(filename)
                 extension = extension.lower().strip('.')
-
-                # Durchgehen der Dateitypen und Entscheidung, wohin die Datei verschoben werden soll
                 for ordner, extensions in ordner_paths.items():
                     ziel_pfad = None
                     if isinstance(extensions, dict):  # Hat Unterordner
@@ -41,13 +55,13 @@ class DownloadHandler(FileSystemEventHandler):
                         ziel_pfad = os.path.join(download_path, ordner, filename)
 
                     if ziel_pfad:
+                        ziel_pfad = generate_unique_filename(ziel_pfad, filename)
                         os.makedirs(os.path.dirname(ziel_pfad), exist_ok=True)
                         shutil.move(src, ziel_pfad)
                         print(f"Verschoben: {filename} -> {ziel_pfad}")
                         break
 
 if __name__ == "__main__":
-    # Zielordner und Unterordner erstellen, falls nicht vorhanden
     for ordner, extensions in ordner_paths.items():
         if isinstance(extensions, dict):  # Hat Unterordner
             for subordner in extensions:
@@ -55,7 +69,7 @@ if __name__ == "__main__":
         else:
             os.makedirs(os.path.join(download_path, ordner), exist_ok=True)
 
-    path = download_path  # Ihr Download-Ordner
+    path = download_path
     event_handler = DownloadHandler()
     observer = Observer()
     observer.schedule(event_handler, path, recursive=False)
@@ -66,5 +80,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         observer.stop()
     observer.join()
-
-print("Sortierung abgeschlossen.")
