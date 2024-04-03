@@ -5,16 +5,17 @@ from watchdog.events import FileSystemEventHandler
 import time
 
 # Pfad zu Ihrem Download-Ordner (bitte anpassen)
-download_path = r'C:\Users\hdlea\Downloads'
+download_path = r'D:\Benutzer\Downloads'
 
 # Zielordner für verschiedene Dateitypen
 ordner_paths = {
     'Bilder': ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'webp'],
+    'Apps': ['zip', 'msi', 'exe'],
     'Videos': ['mp4', 'mov', 'wmv', 'flv', 'avi', 'mkv', 'webm'],
     'Dokumente': {
         'PDFs': ['pdf'],
         'Word': ['doc', 'docx', "dotx"],
-        'Excel': ['xls', 'xlsx', "xlsm", "xltx", "xls"]
+        'Excel': ['xls', 'xlsx', "xlsm", "xltx", "xls", 'csv']
     },
     'Musik': ['mp3', 'wav', 'aac', 'flac', 'ogg', 'm4a']
 }
