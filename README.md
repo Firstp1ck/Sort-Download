@@ -1,2 +1,4 @@
 # Sort-Download
- Automatische Sortierung des Download Ordners in die spezifischen Ordner
+ Automatische Sortierung eines spezifischen (e.x. Download Ordner) in die spezifischen Ordner (Video, Musik, Bilder, Dokumente etc)
+
+Download python, download repository, change config.ini (in Prod directory) to the folder you want to sort automatically and start with the .bat-File
