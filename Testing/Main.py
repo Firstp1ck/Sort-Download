@@ -160,6 +160,6 @@ def main_gui(organizer):
     observer.join()
 
 if __name__ == "__main__":
-    config_path = r'config.json'
+    config_path = r'Testing\config.json'
     organizer = FileOrganizer(config_path)
     main_gui(organizer)
