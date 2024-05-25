@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-import json
+import configparser
 import os
 import shutil
 import logging
@@ -32,27 +32,25 @@ def retry(operation):
 
 class FileOrganizer(FileSystemEventHandler):
     def __init__(self, config_path):
+        config = configparser.ConfigParser()
         try:
-            with open(config_path, 'r') as config_file:
-                self.config = json.load(config_file)
-        except json.JSONDecodeError as e:
-            logging.error(f"Failed to parse config file: {e}")
+            config.read(config_path)
+        except Exception as e:
+            logging.error(f"Failed to read config file: {e}")
             raise
-        except FileNotFoundError:
-            logging.error(f"Config file not found: {config_path}")
-            raise
+        
+        self.download_path = config.get('General', 'download_path', fallback='')
+        self.folder_paths = {section: config.get(section, 'extensions').split(', ')
+                             for section in config.sections() if section != 'General'}
+        
+        self.organize_existing_files()
 
-        self.download_path = self.config.get('download_path', '')
-        self.folder_paths = self.config.get('folder_paths', {})
-
-    def flatten_folder_paths(self, folder_paths):
+    def flatten_folder_paths(self):
+        """Maps file extensions to their respective folders."""
         flat_paths = {}
-        for key, value in folder_paths.items():
-            if isinstance(value, dict):
-                for sub_key, extensions in value.items():
-                    flat_paths[f"{key}\\{sub_key}"] = extensions
-            else:
-                flat_paths[key] = value
+        for folder, extensions in self.folder_paths.items():
+            for ext in extensions:
+                flat_paths[ext.strip()] = folder  # Strip spaces to avoid errors
         return flat_paths
 
     @retry
@@ -64,18 +62,27 @@ class FileOrganizer(FileSystemEventHandler):
         if os.path.isfile(src):
             _, extension = os.path.splitext(filename)
             extension = extension.lower().strip('.')
-            folder_paths = self.flatten_folder_paths(self.folder_paths)
-            for folder, extensions in folder_paths.items():
-                if extension in extensions:
-                    target_path = os.path.join(self.download_path, folder, filename)
-                    os.makedirs(os.path.dirname(target_path), exist_ok=True)
-                    try:
-                        self.move_file(src, target_path)
-                        logging.info(f"Moved: {filename} -> {target_path}")
-                        break
-                    except Exception as e:
-                        logging.error(f"Failed to move {filename}: {e}")
+            extension_to_folder = self.flatten_folder_paths()
+            folder = extension_to_folder.get(extension, None)
+            if folder:
+                target_path = os.path.join(self.download_path, folder, filename)
+                # Check if the directory exists and create it if it does not
+                os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                try:
+                    self.move_file(src, target_path)
+                    logging.info(f"Moved: {filename} -> {target_path}")
+                except Exception as e:
+                    logging.error(f"Failed to move {filename}: {e}")
+            else:
+                logging.warning(f"No designated folder for extension '{extension}' in config. File left in download path.")
 
+    def organize_existing_files(self):
+        """Organize all existing files in the download directory according to their types."""
+        for filename in os.listdir(self.download_path):
+            file_path = os.path.join(self.download_path, filename)
+            if os.path.isfile(file_path):
+                self.organize_file(filename)
+                
     def organize_files(self):
         files = [f for f in os.listdir(self.download_path) if os.path.isfile(os.path.join(self.download_path, f))]
         with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
@@ -160,6 +167,6 @@ def main_gui(organizer):
     observer.join()
 
 if __name__ == "__main__":
-    config_path = r'config.json'
+    config_path = r'config.ini'
     organizer = FileOrganizer(config_path)
     main_gui(organizer)
