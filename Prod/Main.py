@@ -99,7 +99,7 @@ class DownloadHandler(FileSystemEventHandler):
         self.organizer = organizer
 
     def on_modified(self, event):
-        self.organizer.organize_files()
+        organizer.organize_files()
 
 if __name__ == "__main__":
     config_path = 'config.json'  # Path to the configuration file

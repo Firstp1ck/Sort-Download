@@ -11,7 +11,7 @@ if errorlevel 1 (
 )
 
 :: Führen Sie Ihr Python-Skript aus. Ersetzen Sie 'APP.py' durch den Namen Ihres Skripts.
-python Sorting_App.py
+python Main.py
 
 echo.
 echo Skript wurde ausgeführt. Fenster schließen oder weitere Befehle eingeben.

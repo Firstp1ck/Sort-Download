@@ -7,7 +7,8 @@
       "Dokumente": {
         "PDFs": ["pdf"],
         "Word": ["doc", "docx", "dotx"],
-        "Excel": ["xls", "xlsx", "xlsm", "xltx", "xls", "csv"]
+        "Excel": ["xls", "xlsx", "xlsm", "xltx", "xls", "csv"],
+        "Text" : ["txt", "json", "ini", "bat"]
       },
       "Musik": ["mp3", "wav", "aac", "flac", "ogg", "m4a"]
     }
